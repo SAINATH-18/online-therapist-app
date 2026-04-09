@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Therapist</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #4A90D9;
+      --primary-dark: #2C6FAC;
+      --primary-light: #EAF3FB;
+      --green: #52B788;
+      --green-light: #D8F3DC;
+      --green-dark: #2D6A4F;
+      --bg: #F0F7FF;
+      --card: #FFFFFF;
+      --text: #2C3E50;
+      --muted: #6B7C8D;
+      --border: #D6E8F7;
+      --shadow: 0 4px 20px rgba(74,144,217,0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: 0.25s ease;
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== SCREEN SYSTEM ===== */
+    .screen { display: none; min-height: 100vh; flex-direction: column; }
+    .screen.active { display: flex; }
+
+    /* ===== SHARED CARD ===== */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2rem;
+    }
+    .card-sm { padding: 1.25rem; }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border: none; border-radius: 50px; cursor: pointer;
+      font-size: 15px; font-weight: 600; padding: 12px 28px;
+      transition: all var(--transition); text-decoration: none;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(74,144,217,0.35); }
+    .btn-green { background: var(--green); color: #fff; }
+    .btn-green:hover { background: var(--green-dark); transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent; color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    .btn-outline:hover { background: var(--primary-light); }
+    .btn-ghost { background: var(--primary-light); color: var(--primary-dark); border: none; }
+    .btn-ghost:hover { background: #d0e8f9; }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ===== INPUT ===== */
+    .input-group { margin-bottom: 1.1rem; }
+    .input-group label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .input-group input {
+      width: 100%; padding: 12px 16px; border: 2px solid var(--border);
+      border-radius: var(--radius-sm); font-size: 15px; color: var(--text);
+      background: #fff; outline: none; transition: border-color var(--transition);
+    }
+    .input-group input:focus { border-color: var(--primary); }
+
+    /* ===== NAV BAR ===== */
+    .navbar {
+      background: #fff; border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .navbar-brand { font-size: 18px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+    .navbar-brand span { font-size: 22px; }
+    .nav-user { display: flex; align-items: center; gap: 10px; }
+    .nav-user .avatar {
+      width: 38px; height: 38px; border-radius: 50%; background: var(--primary);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+    }
+    .nav-logout { font-size: 13px; color: var(--muted); cursor: pointer; text-decoration: underline; }
+    .nav-logout:hover { color: #e74c3c; }
+
+    /* ===== BOTTOM NAV ===== */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 1px solid var(--border);
+      display: flex; z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.07);
+    }
+    .bnav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 10px 4px 6px; cursor: pointer; transition: color var(--transition);
+      color: var(--muted); font-size: 11px; font-weight: 600; gap: 4px; border: none;
+      background: transparent;
+    }
+    .bnav-item .bnav-icon { font-size: 22px; line-height: 1; }
+    .bnav-item.active { color: var(--primary); }
+    .bnav-item:hover { color: var(--primary-dark); }
+
+    /* ===== MAIN CONTENT AREA ===== */
+    .main-content { flex: 1; padding: 1.5rem 1rem 6rem; max-width: 620px; width: 100%; margin: 0 auto; }
+
+    /* ===== LOGIN SCREEN ===== */
+    #screen-login {
+      align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #EAF3FB 0%, #D8F3DC 100%);
+      padding: 2rem 1rem;
+    }
+    .login-box { max-width: 400px; width: 100%; }
+    .login-header { text-align: center; margin-bottom: 2.5rem; }
+    .login-logo { font-size: 56px; margin-bottom: 0.5rem; }
+    .login-title { font-size: 28px; font-weight: 700; color: var(--primary-dark); }
+    .login-sub { color: var(--muted); font-size: 15px; margin-top: 4px; }
+    .login-tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .login-tab {
+      flex: 1; padding: 10px; text-align: center; cursor: pointer;
+      font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent;
+      margin-bottom: -2px; transition: all var(--transition);
+    }
+    .login-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .login-error { color: #e74c3c; font-size: 13px; margin-top: 8px; display: none; }
+    .login-tagline {
+      text-align: center; margin-top: 1.5rem; color: var(--green-dark);
+      font-size: 14px; font-style: italic;
+    }
+
+    /* ===== DASHBOARD ===== */
+    .greeting-card {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--green) 100%);
+      color: white; border-radius: var(--radius); padding: 1.75rem;
+      margin-bottom: 1.5rem; position: relative; overflow: hidden;
+    }
+    .greeting-card::after {
+      content: '🌿'; position: absolute; right: 20px; top: 50%;
+      transform: translateY(-50%); font-size: 60px; opacity: 0.3;
+    }
+    .greeting-card h2 { font-size: 22px; font-weight: 700; }
+    .greeting-card p { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+    .greeting-card .not-alone {
+      margin-top: 12px; padding: 8px 14px; background: rgba(255,255,255,0.2);
+      border-radius: 50px; display: inline-block; font-size: 13px; font-weight: 600;
+    }
+    .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .dash-card {
+      background: var(--card); border-radius: var(--radius); padding: 1.4rem 1.1rem;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      cursor: pointer; transition: all var(--transition); box-shadow: var(--shadow);
+      border: 2px solid transparent; text-align: center;
+    }
+    .dash-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 28px rgba(74,144,217,0.2); }
+    .dash-card .dash-icon { font-size: 36px; }
+    .dash-card .dash-label { font-size: 14px; font-weight: 700; color: var(--text); }
+    .dash-card .dash-sub { font-size: 12px; color: var(--muted); }
+
+    /* ===== MOOD ===== */
+    .section-title { font-size: 20px; font-weight: 700; margin-bottom: 0.5rem; color: var(--text); }
+    .section-sub { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; }
+    .mood-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
+    .mood-btn {
+      background: var(--card); border-radius: var(--radius); padding: 1.2rem 0.5rem;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      cursor: pointer; transition: all var(--transition); box-shadow: var(--shadow);
+      border: 2px solid transparent; font-size: 13px; font-weight: 700; color: var(--text);
+    }
+    .mood-btn .mood-emoji { font-size: 32px; }
+    .mood-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .mood-btn.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary-dark); }
+    .mood-result {
+      background: var(--green-light); border-radius: var(--radius-sm);
+      padding: 1.25rem; border-left: 4px solid var(--green);
+      font-size: 15px; color: var(--green-dark); line-height: 1.6;
+      display: none;
+    }
+    .mood-result.visible { display: block; }
+
+    /* ===== CHAT ===== */
+    .chat-window {
+      background: var(--card); border-radius: var(--radius); height: 360px;
+      overflow-y: auto; padding: 1rem; margin-bottom: 1rem;
+      box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 12px;
+    }
+    .chat-bubble {
+      max-width: 80%; padding: 10px 14px; border-radius: 18px;
+      font-size: 14px; line-height: 1.55; animation: fadeUp 0.3s ease;
+    }
+    .chat-bubble.user { background: var(--primary); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .chat-bubble.bot { background: #F0F4F8; color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .chat-bubble.bot .bot-name { font-size: 11px; font-weight: 700; color: var(--green); margin-bottom: 3px; }
+    .chat-input-row { display: flex; gap: 10px; }
+    .chat-input-row input {
+      flex: 1; padding: 12px 16px; border: 2px solid var(--border);
+      border-radius: 50px; font-size: 14px; outline: none; transition: border-color var(--transition);
+    }
+    .chat-input-row input:focus { border-color: var(--primary); }
+    .typing-indicator { align-self: flex-start; display: flex; gap: 4px; padding: 10px 14px; background: #F0F4F8; border-radius: 18px; border-bottom-left-radius: 4px; }
+    .typing-dot { width: 8px; height: 8px; background: var(--muted); border-radius: 50%; animation: bounce 1.2s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ===== MUSIC ===== */
+    .music-card {
+      background: var(--card); border-radius: var(--radius); padding: 1.5rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow);
+    }
+    .music-item {
+      display: flex; align-items: center; gap: 14px; padding: 14px;
+      border-radius: var(--radius-sm); cursor: pointer; transition: background var(--transition);
+      border: 2px solid transparent;
+    }
+    .music-item:hover { background: var(--primary-light); border-color: var(--border); }
+    .music-item.playing { background: var(--primary-light); border-color: var(--primary); }
+    .music-icon { font-size: 32px; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--primary-light); border-radius: 50%; flex-shrink: 0; }
+    .music-info { flex: 1; }
+    .music-title { font-size: 15px; font-weight: 700; }
+    .music-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .music-play-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; border: none; cursor: pointer; transition: background var(--transition); }
+    .music-play-btn:hover { background: var(--primary-dark); }
+    .music-visualizer { display: flex; gap: 3px; align-items: flex-end; height: 24px; }
+    .music-bar { width: 4px; background: var(--primary); border-radius: 2px; animation: musicBar 0.7s ease-in-out infinite alternate; }
+    .music-bar:nth-child(2) { animation-delay: 0.1s; height: 60%; }
+    .music-bar:nth-child(3) { animation-delay: 0.2s; height: 80%; }
+    .music-bar:nth-child(4) { animation-delay: 0.15s; height: 50%; }
+    .music-bar:nth-child(5) { animation-delay: 0.05s; height: 70%; }
+    @keyframes musicBar { from { height: 20%; } to { height: 100%; } }
+    .now-playing-banner {
+      background: var(--primary); color: #fff; border-radius: var(--radius-sm);
+      padding: 10px 16px; font-size: 13px; font-weight: 600; display: none;
+      align-items: center; gap: 10px; margin-bottom: 1rem;
+    }
+    .now-playing-banner.visible { display: flex; }
+
+    /* ===== MOTIVATION ===== */
+    .quote-card {
+      background: linear-gradient(135deg, #EAF3FB 0%, #D8F3DC 100%);
+      border-radius: var(--radius); padding: 2.5rem 2rem; text-align: center;
+      margin-bottom: 1.5rem; box-shadow: var(--shadow); position: relative;
+    }
+    .quote-mark { font-size: 72px; line-height: 0.6; color: var(--primary); opacity: 0.2; font-family: Georgia, serif; }
+    .quote-text { font-size: 19px; font-weight: 600; color: var(--primary-dark); line-height: 1.6; margin: 1rem 0; font-style: italic; }
+    .quote-author { font-size: 14px; color: var(--green-dark); font-weight: 600; }
+    .quote-fade { animation: quoteFade 0.5s ease; }
+    @keyframes quoteFade { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+    /* ===== BREATHING EXERCISE ===== */
+    .breathing-card {
+      background: var(--card); border-radius: var(--radius); padding: 2rem; text-align: center;
+      box-shadow: var(--shadow); margin-bottom: 1rem;
+    }
+    .breathing-circle-wrap { display: flex; align-items: center; justify-content: center; margin: 1.5rem 0; }
+    .breathing-circle {
+      width: 120px; height: 120px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(74,144,217,0.25), rgba(82,183,136,0.15));
+      border: 3px solid var(--primary); display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: var(--primary-dark);
+      transition: transform 4s ease-in-out, border-color 4s ease-in-out;
+    }
+    .breathing-circle.inhale { transform: scale(1.6); border-color: var(--green); }
+    .breathing-circle.hold { transform: scale(1.6); border-color: var(--primary); }
+    .breathing-circle.exhale { transform: scale(1); border-color: var(--primary); }
+    .breathing-phase { font-size: 15px; font-weight: 700; color: var(--primary); margin-top: 0.5rem; }
+    .breathing-progress { display: flex; gap: 6px; justify-content: center; margin-top: 1rem; }
+    .breath-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: background 0.4s; }
+    .breath-dot.active { background: var(--primary); }
+
+    /* ===== MISC ===== */
+    .tag {
+      display: inline-block; padding: 3px 10px; border-radius: 50px;
+      font-size: 12px; font-weight: 600; background: var(--primary-light); color: var(--primary-dark);
+    }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+    .empty-state { text-align: center; color: var(--muted); font-size: 14px; padding: 2rem; }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 420px) {
+      .dash-grid { grid-template-columns: 1fr 1fr; }
+      .mood-grid { grid-template-columns: repeat(3, 1fr); }
+      .main-content { padding: 1rem 0.75rem 6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ==================== LOGIN SCREEN ==================== -->
+<section id="screen-login" class="screen active">
+  <div class="login-box">
+    <div class="login-header">
+      <div class="login-logo">🧠</div>
+      <h1 class="login-title">Online Therapist</h1>
+      <p class="login-sub">Your personal mental wellness companion</p>
+    </div>
+    <div class="card">
+      <!-- Tab switcher: Login / Signup -->
+      <div class="login-tabs">
+        <div class="login-tab active" id="tab-login" onclick="switchTab('login')">Log In</div>
+        <div class="login-tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</div>
+      </div>
+
+      <!-- Login form -->
+      <div id="form-login">
+        <div class="input-group">
+          <label>Username</label>
+          <input type="text" id="login-user" placeholder="Enter username" />
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="login-pass" placeholder="Enter password" />
+        </div>
+        <div class="login-error" id="login-error">❌ Invalid username or password.</div>
+        <button class="btn btn-primary" style="width:100%;margin-top:0.5rem;" onclick="doLogin()">Log In →</button>
+      </div>
+
+      <!-- Signup form -->
+      <div id="form-signup" style="display:none;">
+        <div class="input-group">
+          <label>Full Name</label>
+          <input type="text" id="signup-name" placeholder="Your name" />
+        </div>
+        <div class="input-group">
+          <label>Username</label>
+          <input type="text" id="signup-user" placeholder="Choose a username" />
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="signup-pass" placeholder="Choose a password" />
+        </div>
+        <div class="login-error" id="signup-error">❌ Please fill all fields.</div>
+        <button class="btn btn-green" style="width:100%;margin-top:0.5rem;" onclick="doSignup()">Create Account →</button>
+      </div>
+    </div>
+    <p class="login-tagline">💚 You are not alone. We're here for you.</p>
+  </div>
+</section>
+
+<!-- ==================== MAIN APP SCREEN ==================== -->
+<section id="screen-app" class="screen" style="flex-direction:column;">
+
+  <!-- Top Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand"><span>🧠</span> Online Therapist</div>
+    <div class="nav-user">
+      <div class="avatar" id="nav-avatar">A</div>
+      <span class="nav-logout" onclick="doLogout()">Log out</span>
+    </div>
+  </nav>
+
+  <!-- Page content -->
+  <div class="main-content">
+
+    <!-- ===== HOME / DASHBOARD ===== -->
+    <div id="page-home" class="page">
+      <div class="greeting-card">
+        <h2 id="greet-msg">Good Morning! 👋</h2>
+        <p id="greet-name">Welcome back, friend!</p>
+        <div class="not-alone">💚 You are not alone. We're here for you.</div>
+      </div>
+
+      <p style="font-size:14px;font-weight:700;color:var(--muted);margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.5px;">What would you like to do?</p>
+
+      <div class="dash-grid">
+        <div class="dash-card" onclick="goPage('mood')">
+          <div class="dash-icon">🎭</div>
+          <div class="dash-label">Mood Check</div>
+          <div class="dash-sub">Track your feelings</div>
+        </div>
+        <div class="dash-card" onclick="goPage('chat')">
+          <div class="dash-icon">💬</div>
+          <div class="dash-label">Chat Therapist</div>
+          <div class="dash-sub">Talk it through</div>
+        </div>
+        <div class="dash-card" onclick="goPage('music')">
+          <div class="dash-icon">🎵</div>
+          <div class="dash-label">Relax Music</div>
+          <div class="dash-sub">Calm your mind</div>
+        </div>
+        <div class="dash-card" onclick="goPage('motivation')">
+          <div class="dash-icon">✨</div>
+          <div class="dash-label">Daily Boost</div>
+          <div class="dash-sub">Get inspired</div>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Breathing exercise teaser -->
+      <div class="breathing-card">
+        <p style="font-size:16px;font-weight:700;margin-bottom:4px;">🌬️ Quick Breathing Exercise</p>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:0;">Calm your nervous system in 2 minutes</p>
+        <div class="breathing-circle-wrap">
+          <div class="breathing-circle" id="breath-circle">Breathe</div>
+        </div>
+        <div class="breathing-phase" id="breath-phase">Press Start to begin</div>
+        <div class="breathing-progress" id="breath-dots">
+          <div class="breath-dot" data-i="0"></div><div class="breath-dot" data-i="1"></div><div class="breath-dot" data-i="2"></div>
+          <div class="breath-dot" data-i="3"></div><div class="breath-dot" data-i="4"></div><div class="breath-dot" data-i="5"></div>
+        </div>
+        <button class="btn btn-ghost" style="margin-top:1.25rem;" id="breath-btn" onclick="toggleBreathing()">▶ Start</button>
+      </div>
+    </div>
+
+    <!-- ===== MOOD SELECTION ===== -->
+    <div id="page-mood" class="page" style="display:none;">
+      <p class="section-title">How are you feeling today?</p>
+      <p class="section-sub">Select your current mood — no judgment here 💙</p>
+
+      <div class="mood-grid">
+        <button class="mood-btn" data-mood="Stressed" onclick="selectMood(this)">
+          <span class="mood-emoji">😰</span> Stressed
+        </button>
+        <button class="mood-btn" data-mood="Anxious" onclick="selectMood(this)">
+          <span class="mood-emoji">😟</span> Anxious
+        </button>
+        <button class="mood-btn" data-mood="Sad" onclick="selectMood(this)">
+          <span class="mood-emoji">😢</span> Sad
+        </button>
+        <button class="mood-btn" data-mood="Angry" onclick="selectMood(this)">
+          <span class="mood-emoji">😠</span> Angry
+        </button>
+        <button class="mood-btn" data-mood="Calm" onclick="selectMood(this)">
+          <span class="mood-emoji">😌</span> Calm
+        </button>
+        <button class="mood-btn" data-mood="Happy" onclick="selectMood(this)">
+          <span class="mood-emoji">😊</span> Happy
+        </button>
+      </div>
+
+      <div class="mood-result" id="mood-result"></div>
+    </div>
+
+    <!-- ===== CHAT THERAPIST ===== -->
+    <div id="page-chat" class="page" style="display:none;">
+      <p class="section-title">Chat with Your Therapist</p>
+      <p class="section-sub">Dr. Aria is here to listen 💙</p>
+
+      <div class="chat-window" id="chat-window">
+        <!-- Initial bot message -->
+        <div class="chat-bubble bot">
+          <div class="bot-name">Dr. Aria ✦</div>
+          Hello! I'm Dr. Aria, your compassionate AI therapist. 🌿<br/>This is a safe space. You can share anything on your mind — I'm here to listen and support you. How are you feeling today?
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Type your message..." onkeydown="if(event.key==='Enter')sendChat()" />
+        <button class="btn btn-primary" style="padding:12px 18px;" onclick="sendChat()">Send ➤</button>
+      </div>
+    </div>
+
+    <!-- ===== RELAXATION MUSIC ===== -->
+    <div id="page-music" class="page" style="display:none;">
+      <p class="section-title">Relaxation Music</p>
+      <p class="section-sub">Let soothing sounds ease your mind 🎧</p>
+
+      <div class="now-playing-banner" id="now-playing-banner">
+        <div class="music-visualizer">
+          <div class="music-bar"></div><div class="music-bar"></div>
+          <div class="music-bar"></div><div class="music-bar"></div><div class="music-bar"></div>
+        </div>
+        <span id="now-playing-text">Playing...</span>
+      </div>
+
+      <div class="music-card">
+        <div class="music-item" id="track-0" onclick="toggleTrack(0)">
+          <div class="music-icon">🌿</div>
+          <div class="music-info">
+            <div class="music-title">Nature Sounds</div>
+            <div class="music-desc">Birds, wind & forest ambience</div>
+          </div>
+          <button class="music-play-btn" id="playbtn-0">▶</button>
+        </div>
+        <hr class="divider" style="margin:0.5rem 0;" />
+        <div class="music-item" id="track-1" onclick="toggleTrack(1)">
+          <div class="music-icon">🌧️</div>
+          <div class="music-info">
+            <div class="music-title">Rain Music</div>
+            <div class="music-desc">Gentle rain & thunder</div>
+          </div>
+          <button class="music-play-btn" id="playbtn-1">▶</button>
+        </div>
+        <hr class="divider" style="margin:0.5rem 0;" />
+        <div class="music-item" id="track-2" onclick="toggleTrack(2)">
+          <div class="music-icon">🔔</div>
+          <div class="music-info">
+            <div class="music-title">Meditation Music</div>
+            <div class="music-desc">432 Hz healing tones & bowls</div>
+          </div>
+          <button class="music-play-btn" id="playbtn-2">▶</button>
+        </div>
+        <hr class="divider" style="margin:0.5rem 0;" />
+        <div class="music-item" id="track-3" onclick="toggleTrack(3)">
+          <div class="music-icon">🌊</div>
+          <div class="music-info">
+            <div class="music-title">Ocean Waves</div>
+            <div class="music-desc">Calming seaside atmosphere</div>
+          </div>
+          <button class="music-play-btn" id="playbtn-3">▶</button>
+        </div>
+      </div>
+
+      <div class="card card-sm" style="text-align:center;color:var(--muted);font-size:13px;">
+        🔊 Audio is generated using your browser's built-in sound engine — no downloads needed.
+      </div>
+    </div>
+
+    <!-- ===== DAILY MOTIVATION ===== -->
+    <div id="page-motivation" class="page" style="display:none;">
+      <p class="section-title">Your Daily Boost ✨</p>
+      <p class="section-sub">A little inspiration goes a long way</p>
+
+      <div class="quote-card" id="quote-card">
+        <div class="quote-mark">"</div>
+        <p class="quote-text" id="quote-text">Loading...</p>
+        <p class="quote-author" id="quote-author">— Loading</p>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;margin-bottom:1rem;" onclick="newQuote()">🔀 New Quote</button>
+      <button class="btn btn-outline" style="width:100%;" onclick="shareQuote()">💌 Share This Quote</button>
+
+      <hr class="divider" />
+
+      <div class="card card-sm" style="text-align:center;">
+        <p style="font-size:22px;margin-bottom:8px;">💚</p>
+        <p style="font-weight:700;font-size:16px;color:var(--primary-dark);">You are not alone.</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;">Millions of people face similar challenges every day. Reaching out is an act of courage.</p>
+      </div>
+    </div>
+
+  </div><!-- end main-content -->
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <button class="bnav-item active" id="bnav-home" onclick="goPage('home')">
+      <span class="bnav-icon">🏠</span> Home
+    </button>
+    <button class="bnav-item" id="bnav-mood" onclick="goPage('mood')">
+      <span class="bnav-icon">🎭</span> Mood
+    </button>
+    <button class="bnav-item" id="bnav-chat" onclick="goPage('chat')">
+      <span class="bnav-icon">💬</span> Chat
+    </button>
+    <button class="bnav-item" id="bnav-music" onclick="goPage('music')">
+      <span class="bnav-icon">🎵</span> Music
+    </button>
+    <button class="bnav-item" id="bnav-motivation" onclick="goPage('motivation')">
+      <span class="bnav-icon">✨</span> Boost
+    </button>
+  </nav>
+
+</section>
+
+<script>
+// ======================================================
+// DATA STORE: users stored in-memory (demo purposes)
+// ======================================================
+let users = { demo: { password: 'demo123', name: 'Demo User' } };
+let currentUser = null;
+
+// ======================================================
+// AUTH: Tab switching
+// ======================================================
+function switchTab(tab) {
+  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('signup-error').style.display = 'none';
+}
+
+// AUTH: Login
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  if (users[u] && users[u].password === p) {
+    err.style.display = 'none';
+    loginSuccess(u, users[u].name);
+  } else {
+    err.style.display = 'block';
+  }
+}
+
+// AUTH: Signup
+function doSignup() {
+  const name = document.getElementById('signup-name').value.trim();
+  const u = document.getElementById('signup-user').value.trim();
+  const p = document.getElementById('signup-pass').value;
+  const err = document.getElementById('signup-error');
+  if (!name || !u || !p) { err.style.display = 'block'; err.textContent = '❌ Please fill all fields.'; return; }
+  if (users[u]) { err.style.display = 'block'; err.textContent = '❌ Username already taken.'; return; }
+  users[u] = { password: p, name };
+  err.style.display = 'none';
+  loginSuccess(u, name);
+}
+
+// AUTH: Success
+function loginSuccess(username, name) {
+  currentUser = { username, name };
+  // Update greeting
+  const h = new Date().getHours();
+  const gr = h < 12 ? 'Good Morning' : h < 18 ? 'Good Afternoon' : 'Good Evening';
+  document.getElementById('greet-msg').textContent = gr + '! 👋';
+  document.getElementById('greet-name').textContent = 'Welcome back, ' + name.split(' ')[0] + '!';
+  document.getElementById('nav-avatar').textContent = name[0].toUpperCase();
+  // Switch screen
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  goPage('home');
+  showQuote();
+}
+
+// AUTH: Logout
+function doLogout() {
+  currentUser = null;
+  stopAudio();
+  stopBreathing();
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+// ======================================================
+// NAVIGATION: page router
+// ======================================================
+function goPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).style.display = 'block';
+  const navItem = document.getElementById('bnav-' + page);
+  if (navItem) navItem.classList.add('active');
+  // Scroll to top
+  document.querySelector('.main-content').scrollTo(0, 0);
+}
+
+// ======================================================
+// MOOD: select and show suggestion
+// ======================================================
+const moodSuggestions = {
+  Stressed: "🌿 Feeling stressed is your body's signal to slow down. Try a 5-minute breathing exercise, take a short walk, or listen to calming music. Remember — you don't have to solve everything at once. One step at a time. 💙",
+  Anxious: "💛 Anxiety can feel overwhelming, but you have the strength to get through it. Ground yourself: name 5 things you can see, 4 you can touch, 3 you can hear. You are safe. Everything will be okay. 🌸",
+  Sad: "💙 It's okay to feel sad. Your feelings are valid and they won't last forever. Allow yourself to feel them without judgment. Consider journaling, talking to a friend, or listening to uplifting music. Brighter days are coming. 🌈",
+  Angry: "🔴 Anger is a normal human emotion. Try to breathe deeply before reacting — inhale for 4 counts, hold for 4, exhale for 6. Removing yourself from the situation briefly can help gain perspective. You've handled hard things before. 💪",
+  Calm: "🌿 How wonderful! You're in a great place right now. Use this peaceful state to practice gratitude — think of 3 things you're thankful for today. Enjoy this moment and carry it with you. 😌✨",
+  Happy: "😊 That's beautiful! Your positive energy matters. Share a smile with someone, celebrate a small win, or use this energy to do something creative. Happiness is contagious — keep spreading it! 🌟"
+};
+
+function selectMood(btn) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const mood = btn.dataset.mood;
+  const resultEl = document.getElementById('mood-result');
+  resultEl.innerHTML = '<strong>' + mood + '</strong><br/>' + moodSuggestions[mood];
+  resultEl.classList.add('visible');
+}
+
+// ======================================================
+// CHAT: therapist bot responses
+// ======================================================
+const botReplies = {
+  greetings: ['hello','hi','hey','good morning','good evening','good afternoon','howdy'],
+  sadKeywords: ['sad','unhappy','depressed','cry','crying','tears','miserable','hopeless','worthless'],
+  anxiousKeywords: ['anxious','anxiety','panic','worried','worry','scared','fear','nervous','overwhelmed'],
+  angryKeywords: ['angry','mad','furious','rage','hate','annoyed','frustrated'],
+  stressKeywords: ['stress','stressed','pressure','burnout','exhausted','tired','overworked'],
+  goodKeywords: ['good','great','fine','happy','better','okay','well','amazing'],
+  lonelyKeywords: ['alone','lonely','isolated','nobody','no one','no friends'],
+  helpKeywords: ['help','advice','what should i','how do i','how can i'],
+  thankKeywords: ['thank','thanks','grateful','appreciate']
+};
+
+const responses = {
+  greet: [
+    "Hello! 😊 I'm so glad you reached out today. How are you really feeling?",
+    "Hi there! 🌿 It's wonderful to see you here. What's on your mind today?",
+    "Hey! I'm here and ready to listen. How has your day been treating you? 💙"
+  ],
+  sad: [
+    "I'm truly sorry you're feeling this way. 💙 Sadness is difficult, but it's also a sign that you care deeply. Would you like to tell me more about what happened?",
+    "I hear you, and I want you to know — your feelings matter deeply. 🌸 You don't have to carry this alone. What's been weighing on your heart?",
+    "Feeling sad is completely valid. 💙 Sometimes we need to sit with our emotions before we can move forward. I'm right here with you. Can you share what's been happening?"
+  ],
+  anxious: [
+    "Anxiety can feel so consuming. 💛 Let's try something together — take a slow, deep breath in for 4 counts... hold for 2... and breathe out for 6. You're safe here. What's causing these feelings?",
+    "I understand that anxious feeling all too well. 🌿 One moment at a time — you don't need to figure everything out right now. What's weighing on your mind most?",
+    "You're not alone in this. 💛 Anxiety is very common, and it doesn't define you. Let's talk through what's troubling you — sharing often helps lighten the load."
+  ],
+  angry: [
+    "It's completely okay to feel angry — that's a very human response. 💪 What triggered this feeling? Sometimes naming it helps us understand and release it.",
+    "I hear your frustration, and it makes total sense. 🌊 Anger often signals that something important to us is being threatened. What happened?",
+    "Anger can be really powerful energy. 🔥 Let's channel it productively. Take a few deep breaths with me, and then tell me what's going on."
+  ],
+  stressed: [
+    "Stress can feel absolutely overwhelming. 🌿 You're carrying a lot right now, and that takes real courage. What's putting the most pressure on you today?",
+    "I hear you — stress piles up quickly. 💙 Remember, you don't have to handle everything at once. Let's break it down together. What feels most urgent?",
+    "Even the strongest people need support. 🌱 I'm here for you. What's been stressing you out the most lately?"
+  ],
+  good: [
+    "That's genuinely wonderful to hear! 😊 I'm so glad you're doing well. What's been contributing to this positive feeling?",
+    "Fantastic! 🌟 Hold onto that feeling. Would you like to talk about what's going well, or is there something else on your mind?",
+    "Amazing! 🌟 Your positivity is beautiful. Keep embracing these good moments — you deserve them!"
+  ],
+  lonely: [
+    "Loneliness can be one of the hardest feelings. 💙 Please know that by being here, you've already taken a brave step. You don't have to face this alone — I'm right here.",
+    "I'm really glad you told me this. 🌿 Loneliness doesn't mean you're unwanted — it means you're human and you need connection. What does your social life look like right now?",
+    "You matter deeply, and I'm here for you. 💙 Feeling lonely doesn't mean you ARE alone. Would you like to explore some ways to build more connection?"
+  ],
+  help: [
+    "Of course — I'm here to help. 💙 Let's work through this together. Can you share more details about your situation?",
+    "Absolutely. 🌿 The fact that you're asking for help shows real strength. Tell me more, and we'll figure this out step by step.",
+    "I'm so glad you reached out. 💛 You took an important step just by asking. Please share what's going on — we'll explore it together."
+  ],
+  thanks: [
+    "You're so welcome. 💚 Remember, you're doing better than you think. I'm always here when you need to talk.",
+    "It's my honor to support you. 🌿 You deserve care and kindness. Please don't hesitate to come back anytime.",
+    "Of course! 😊 Taking care of your mental health is so important. I'm proud of you for being here."
+  ],
+  default: [
+    "Thank you for sharing that with me. 💙 It takes courage to open up. Can you tell me more about how this is making you feel?",
+    "I really appreciate you trusting me with this. 🌿 Every feeling you have is valid. Would you like to explore this more deeply?",
+    "I'm listening carefully. 💛 Your experiences matter. What's the most important thing you want me to understand right now?",
+    "That sounds really challenging, and I want to understand better. 💙 What has this experience been like for you day to day?",
+    "You're so brave for sharing this. 🌸 Can we gently unpack what you're going through together? Take your time.",
+    "I hear you, and I'm fully present with you right now. 💚 How long have you been feeling this way?"
+  ]
+};
+
+function getBotResponse(msg) {
+  const m = msg.toLowerCase();
+  if (botReplies.greetings.some(w => m.includes(w))) return pick(responses.greet);
+  if (botReplies.sadKeywords.some(w => m.includes(w))) return pick(responses.sad);
+  if (botReplies.anxiousKeywords.some(w => m.includes(w))) return pick(responses.anxious);
+  if (botReplies.angryKeywords.some(w => m.includes(w))) return pick(responses.angry);
+  if (botReplies.stressKeywords.some(w => m.includes(w))) return pick(responses.stressed);
+  if (botReplies.goodKeywords.some(w => m.includes(w))) return pick(responses.good);
+  if (botReplies.lonelyKeywords.some(w => m.includes(w))) return pick(responses.lonely);
+  if (botReplies.helpKeywords.some(w => m.includes(w))) return pick(responses.help);
+  if (botReplies.thankKeywords.some(w => m.includes(w))) return pick(responses.thanks);
+  return pick(responses.default);
+}
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  const win = document.getElementById('chat-window');
+
+  // Add user bubble
+  const userBubble = document.createElement('div');
+  userBubble.className = 'chat-bubble user';
+  userBubble.textContent = msg;
+  win.appendChild(userBubble);
+  win.scrollTop = win.scrollHeight;
+
+  // Show typing indicator
+  const typing = document.createElement('div');
+  typing.className = 'typing-indicator';
+  typing.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  win.appendChild(typing);
+  win.scrollTop = win.scrollHeight;
+
+  // Bot reply after delay
+  const delay = 1000 + Math.random() * 800;
+  setTimeout(() => {
+    typing.remove();
+    const reply = getBotResponse(msg);
+    const botBubble = document.createElement('div');
+    botBubble.className = 'chat-bubble bot';
+    botBubble.innerHTML = '<div class="bot-name">Dr. Aria ✦</div>' + reply;
+    win.appendChild(botBubble);
+    win.scrollTop = win.scrollHeight;
+  }, delay);
+}
+
+// ======================================================
+// MUSIC: Web Audio API synthesized ambient sounds
+// ======================================================
+let audioCtx = null;
+let activeNodes = [];
+let currentTrack = null;
+
+const tracks = [
+  { name: 'Nature Sounds', gen: generateNature },
+  { name: 'Rain Music', gen: generateRain },
+  { name: 'Meditation Music', gen: generateMeditation },
+  { name: 'Ocean Waves', gen: generateOcean }
+];
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function stopAudio() {
+  activeNodes.forEach(n => { try { n.stop(); } catch(e){} });
+  activeNodes = [];
+  document.querySelectorAll('.music-item').forEach(i => i.classList.remove('playing'));
+  document.querySelectorAll('.music-play-btn').forEach(b => b.textContent = '▶');
+  document.getElementById('now-playing-banner').classList.remove('visible');
+  currentTrack = null;
+}
+
+function toggleTrack(idx) {
+  if (currentTrack === idx) { stopAudio(); return; }
+  stopAudio();
+  currentTrack = idx;
+  const ctx = getAudioCtx();
+  tracks[idx].gen(ctx);
+  document.getElementById('track-' + idx).classList.add('playing');
+  document.getElementById('playbtn-' + idx).textContent = '⏸';
+  document.getElementById('now-playing-text').textContent = 'Now playing: ' + tracks[idx].name;
+  document.getElementById('now-playing-banner').classList.add('visible');
+}
+
+// Noise buffer helper
+function createNoiseBuffer(ctx, duration) {
+  const len = ctx.sampleRate * duration;
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  return buf;
+}
+
+function playLoop(ctx, buf, gainVal, filterType, filterFreq) {
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const gain = ctx.createGain(); gain.gain.value = gainVal;
+  const filt = ctx.createBiquadFilter(); filt.type = filterType; filt.frequency.value = filterFreq;
+  src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+  src.start();
+  activeNodes.push(src);
+  return src;
+}
+
+function generateNature(ctx) {
+  const buf = createNoiseBuffer(ctx, 4);
+  playLoop(ctx, buf, 0.08, 'bandpass', 800);  // wind
+  // Bird chirps
+  for (let i = 0; i < 5; i++) {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.frequency.value = 2000 + Math.random() * 1500;
+    osc.type = 'sine';
+    g.gain.setValueAtTime(0, ctx.currentTime + i * 2.5);
+    g.gain.linearRampToValueAtTime(0.05, ctx.currentTime + i * 2.5 + 0.05);
+    g.gain.linearRampToValueAtTime(0, ctx.currentTime + i * 2.5 + 0.25);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + i * 2.5 + 0.4);
+    activeNodes.push(osc);
+  }
+}
+
+function generateRain(ctx) {
+  const buf = createNoiseBuffer(ctx, 4);
+  playLoop(ctx, buf, 0.3, 'lowpass', 1200);
+  playLoop(ctx, buf, 0.15, 'bandpass', 400);
+}
+
+function generateMeditation(ctx) {
+  const freqs = [174, 285, 396, 417, 528, 639, 741, 852, 963];
+  freqs.slice(0,3).forEach((f, i) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.frequency.value = f; osc.type = 'sine';
+    g.gain.value = 0.04;
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(); activeNodes.push(osc);
+    // Harmonics
+    const osc2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    osc2.frequency.value = f * 2; osc2.type = 'sine';
+    g2.gain.value = 0.02;
+    osc2.connect(g2); g2.connect(ctx.destination);
+    osc2.start(); activeNodes.push(osc2);
+  });
+  const buf = createNoiseBuffer(ctx, 4);
+  playLoop(ctx, buf, 0.02, 'lowpass', 300);
+}
+
+function generateOcean(ctx) {
+  const buf = createNoiseBuffer(ctx, 4);
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const gain = ctx.createGain();
+  const lfo = ctx.createOscillator();
+  const lfoGain = ctx.createGain();
+  lfo.frequency.value = 0.12; lfoGain.gain.value = 0.15;
+  gain.gain.value = 0.2;
+  const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 700;
+  lfo.connect(lfoGain); lfoGain.connect(gain.gain);
+  src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+  src.start(); lfo.start();
+  activeNodes.push(src, lfo);
+}
+
+// ======================================================
+// DAILY MOTIVATION: quote bank
+// ======================================================
+const quotes = [
+  { text: "You are braver than you believe, stronger than you seem, and smarter than you think.", author: "A.A. Milne" },
+  { text: "Your present circumstances don't determine where you can go; they merely determine where you start.", author: "Nido Qubein" },
+  { text: "Mental health is not a destination, but a process. It's about how you drive, not where you're going.", author: "Noam Shpancer" },
+  { text: "You don't have to be positive all the time. It's perfectly okay to feel sad, angry, annoyed, frustrated, scared, or anxious.", author: "Lori Deschene" },
+  { text: "Not until we are lost do we begin to understand ourselves.", author: "Henry David Thoreau" },
+  { text: "Promise me you'll always remember: You're braver than you believe, and stronger than you seem.", author: "Christopher Robin" },
+  { text: "Self-care is not self-indulgence, it is self-preservation.", author: "Audre Lorde" },
+  { text: "Recovery is not one and done. It is a lifelong journey that takes place one day, one step at a time.", author: "Unknown" },
+  { text: "What lies behind us and what lies before us are tiny matters compared to what lies within us.", author: "Ralph Waldo Emerson" },
+  { text: "You are enough. A thousand times enough.", author: "Unknown" },
+  { text: "Be gentle with yourself. You are a child of the universe, no less than the trees and the stars.", author: "Max Ehrmann" },
+  { text: "Out of difficulties grow miracles.", author: "Jean de la Bruyère" },
+  { text: "The strongest people are not those who show strength in front of us, but those who win battles we know nothing about.", author: "Unknown" },
+  { text: "It's okay to not be okay — as long as you're not giving up.", author: "Karen Salmansohn" },
+  { text: "One small crack does not mean that you are broken, it means that you were put to the test and you didn't fall apart.", author: "Linda Poindexter" }
+];
+
+let lastQuoteIdx = -1;
+function showQuote() {
+  let idx;
+  do { idx = Math.floor(Math.random() * quotes.length); } while (idx === lastQuoteIdx);
+  lastQuoteIdx = idx;
+  const q = quotes[idx];
+  const card = document.getElementById('quote-card');
+  card.classList.remove('quote-fade');
+  void card.offsetWidth;
+  card.classList.add('quote-fade');
+  document.getElementById('quote-text').textContent = q.text;
+  document.getElementById('quote-author').textContent = '— ' + q.author;
+}
+
+function newQuote() { showQuote(); }
+
+function shareQuote() {
+  const text = document.getElementById('quote-text').textContent;
+  const author = document.getElementById('quote-author').textContent;
+  if (navigator.share) {
+    navigator.share({ text: '"' + text + '" ' + author + '\n\n— Shared via Online Therapist App' });
+  } else {
+    navigator.clipboard.writeText('"' + text + '" ' + author).then(() => alert('Quote copied to clipboard! 📋'));
+  }
+}
+
+// ======================================================
+// BREATHING EXERCISE ANIMATION
+// ======================================================
+let breathingActive = false;
+let breathTimer = null;
+const breathPhases = [
+  { label: 'Inhale...', class: 'inhale', duration: 4000 },
+  { label: 'Hold...', class: 'hold', duration: 2000 },
+  { label: 'Exhale...', class: 'exhale', duration: 6000 },
+  { label: 'Rest...', class: '', duration: 1000 }
+];
+let breathPhaseIdx = 0;
+let breathCycle = 0;
+
+function toggleBreathing() {
+  if (breathingActive) { stopBreathing(); return; }
+  breathingActive = true;
+  breathPhaseIdx = 0; breathCycle = 0;
+  document.getElementById('breath-btn').textContent = '⏸ Stop';
+  runBreathPhase();
+}
+
+function runBreathPhase() {
+  if (!breathingActive) return;
+  const phase = breathPhases[breathPhaseIdx];
+  const circle = document.getElementById('breath-circle');
+  const phaseLabel = document.getElementById('breath-phase');
+  circle.className = 'breathing-circle ' + phase.class;
+  circle.textContent = phase.label.replace('...', '');
+  phaseLabel.textContent = phase.label;
+  if (breathPhaseIdx === 0) {
+    breathCycle = (breathCycle + 1) % 6;
+    document.querySelectorAll('.breath-dot').forEach((d, i) => {
+      d.classList.toggle('active', i <= breathCycle);
+    });
+  }
+  breathTimer = setTimeout(() => {
+    breathPhaseIdx = (breathPhaseIdx + 1) % breathPhases.length;
+    runBreathPhase();
+  }, phase.duration);
+}
+
+function stopBreathing() {
+  breathingActive = false;
+  clearTimeout(breathTimer);
+  document.getElementById('breath-circle').className = 'breathing-circle';
+  document.getElementById('breath-circle').textContent = 'Breathe';
+  document.getElementById('breath-phase').textContent = 'Press Start to begin';
+  document.getElementById('breath-btn').textContent = '▶ Start';
+  document.querySelectorAll('.breath-dot').forEach(d => d.classList.remove('active'));
+}
+
+// ======================================================
+// KEYBOARD SUBMIT on login fields
+// ======================================================
+document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('signup-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doSignup(); });
+</script>
+</body>
+</html>
